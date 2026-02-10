@@ -532,68 +532,110 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
             try {
                 const response = await fetch('/api/current');
                 const result = await response.json();
+                console.log('API Response:', result);
                 
                 if (result.success && result.data) {
                     const data = result.data;
+                    console.log('Data:', data);
                     
                     // Update signal
                     if (data.wifi_info) {
                         const wifi = data.wifi_info;
-                        document.getElementById('signal-value').textContent = wifi.signal_strength_dbm;
-                        document.getElementById('signal-quality').textContent = `${wifi.signal_quality_percent}% quality`;
-                        document.getElementById('signal-bar').style.width = `${wifi.signal_quality_percent}%`;
+                        const signalValue = document.getElementById('signal-value');
+                        const signalQuality = document.getElementById('signal-quality');
+                        const signalBar = document.getElementById('signal-bar');
+                        const ssidValue = document.getElementById('ssid-value');
+                        const channelValue = document.getElementById('channel-value');
+                        const speedValue = document.getElementById('speed-value');
                         
-                        const signalEl = document.getElementById('signal-value');
-                        signalEl.className = wifi.signal_strength_dbm > -60 ? 'text-2xl font-bold status-good' :
-                                            wifi.signal_strength_dbm > -70 ? 'text-2xl font-bold status-warning' : 'text-2xl font-bold status-critical';
+                        if (signalValue) signalValue.textContent = wifi.signal_strength_dbm;
+                        if (signalQuality) signalQuality.textContent = `${wifi.signal_quality_percent}% quality`;
+                        if (signalBar) signalBar.style.width = `${wifi.signal_quality_percent}%`;
                         
-                        document.getElementById('ssid-value').textContent = wifi.ssid || '--';
-                        document.getElementById('channel-value').textContent = `Channel: ${wifi.channel} (${wifi.band.replace('Band', '').replace('_', '.')})`;
-                        document.getElementById('speed-value').textContent = `Speed: ${wifi.link_speed_mbps} Mbps`;
+                        if (signalValue) {
+                            signalValue.className = wifi.signal_strength_dbm > -60 ? 'text-2xl font-bold status-good' :
+                                                wifi.signal_strength_dbm > -70 ? 'text-2xl font-bold status-warning' : 'text-2xl font-bold status-critical';
+                        }
                         
-                        document.getElementById('detail-bssid').textContent = wifi.bssid || '--';
-                        document.getElementById('detail-phy').textContent = wifi.phy_type || '--';
-                        document.getElementById('detail-security').textContent = wifi.security_type || '--';
-                        document.getElementById('detail-frequency').textContent = `${wifi.frequency_mhz} MHz`;
-                        document.getElementById('detail-ipv4').textContent = wifi.ipv4_address || '--';
-                        document.getElementById('detail-ipv6').textContent = wifi.ipv6_address || '--';
-                        document.getElementById('detail-gateway').textContent = wifi.gateway || '--';
-                        document.getElementById('detail-dns').textContent = wifi.dns_servers?.join(', ') || '--';
+                        if (ssidValue) ssidValue.textContent = wifi.ssid || '--';
+                        if (channelValue) channelValue.textContent = `Channel: ${wifi.channel} (${wifi.band.replace('Band', '').replace('_', '.')})`;
+                        if (speedValue) speedValue.textContent = `Speed: ${wifi.link_speed_mbps} Mbps`;
+                        
+                        const detailBssid = document.getElementById('detail-bssid');
+                        const detailPhy = document.getElementById('detail-phy');
+                        const detailSecurity = document.getElementById('detail-security');
+                        const detailFrequency = document.getElementById('detail-frequency');
+                        const detailIpv4 = document.getElementById('detail-ipv4');
+                        const detailIpv6 = document.getElementById('detail-ipv6');
+                        const detailGateway = document.getElementById('detail-gateway');
+                        const detailDns = document.getElementById('detail-dns');
+                        
+                        if (detailBssid) detailBssid.textContent = wifi.bssid || '--';
+                        if (detailPhy) detailPhy.textContent = wifi.phy_type || '--';
+                        if (detailSecurity) detailSecurity.textContent = wifi.security_type || '--';
+                        if (detailFrequency) detailFrequency.textContent = `${wifi.frequency_mhz} MHz`;
+                        if (detailIpv4) detailIpv4.textContent = wifi.ipv4_address || '--';
+                        if (detailIpv6) detailIpv6.textContent = wifi.ipv6_address || '--';
+                        if (detailGateway) detailGateway.textContent = wifi.gateway || '--';
+                        if (detailDns) detailDns.textContent = wifi.dns_servers?.join(', ') || '--';
                     }
                     
                     // Update latency
                     if (data.latency) {
                         const lat = data.latency;
-                        document.getElementById('latency-value').textContent = lat.average_latency_ms?.toFixed(1) || '--';
-                        document.getElementById('latency-range').textContent = `Min: ${lat.min_latency_ms?.toFixed(1) || '--'} / Max: ${lat.max_latency_ms?.toFixed(1) || '--'}`;
-                        document.getElementById('jitter-value').textContent = `Jitter: ${lat.jitter_ms?.toFixed(1) || '--'} ms`;
-                        document.getElementById('packet-loss-value').textContent = lat.packet_loss_percent?.toFixed(1) || '0';
+                        const latencyValue = document.getElementById('latency-value');
+                        const latencyRange = document.getElementById('latency-range');
+                        const jitterValue = document.getElementById('jitter-value');
+                        const packetLossValue = document.getElementById('packet-loss-value');
                         
-                        const latEl = document.getElementById('latency-value');
-                        const avgLat = lat.average_latency_ms || 0;
-                        latEl.className = avgLat < 50 ? 'text-2xl font-bold status-good' :
-                                         avgLat < 100 ? 'text-2xl font-bold status-warning' : 'text-2xl font-bold status-critical';
+                        if (latencyValue) latencyValue.textContent = lat.average_latency_ms?.toFixed(1) || '--';
+                        if (latencyRange) latencyRange.textContent = `Min: ${lat.min_latency_ms?.toFixed(1) || '--'} / Max: ${lat.max_latency_ms?.toFixed(1) || '--'}`;
+                        if (jitterValue) jitterValue.textContent = `Jitter: ${lat.jitter_ms?.toFixed(1) || '--'} ms`;
+                        if (packetLossValue) packetLossValue.textContent = lat.packet_loss_percent?.toFixed(1) || '0';
+                        
+                        if (latencyValue) {
+                            const avgLat = lat.average_latency_ms || 0;
+                            latencyValue.className = avgLat < 50 ? 'text-2xl font-bold status-good' :
+                                             avgLat < 100 ? 'text-2xl font-bold status-warning' : 'text-2xl font-bold status-critical';
+                        }
                     }
                     
                     // Update connectivity
                     if (data.connectivity) {
                         const conn = data.connectivity;
-                        document.getElementById('loopback-status').innerHTML = `Loopback: <span class="font-semibold ${conn.loopback_reachable ? 'status-good' : 'status-critical'}">${conn.loopback_reachable ? 'OK' : 'Failed'}</span>`;
-                        document.getElementById('router-status').innerHTML = `Router: <span class="font-semibold ${conn.router_reachable ? 'status-good' : 'status-critical'}">${conn.router_reachable ? 'Reachable' : 'Unreachable'}</span>`;
-                        document.getElementById('internet-status').innerHTML = `Internet: <span class="font-semibold ${conn.internet_reachable ? 'status-good' : 'status-critical'}">${conn.internet_reachable ? 'Reachable' : 'Unreachable'}</span>`;
-                        document.getElementById('connection-status').innerHTML = `WiFi: <span class="font-semibold ${conn.is_connected ? 'status-good' : 'status-critical'}">${conn.is_connected ? 'Connected' : 'Disconnected'}</span>`;
+                        console.log('Connectivity data:', conn);
+                        const loopbackStatus = document.getElementById('loopback-status');
+                        const routerStatus = document.getElementById('router-status');
+                        const internetStatus = document.getElementById('internet-status');
+                        const connectionStatus = document.getElementById('connection-status');
+                        
+                        if (loopbackStatus) loopbackStatus.innerHTML = `Loopback: <span class="font-semibold ${conn.loopback_reachable ? 'status-good' : 'status-critical'}">${conn.loopback_reachable ? 'OK' : 'Failed'}</span>`;
+                        if (routerStatus) routerStatus.innerHTML = `Router: <span class="font-semibold ${conn.router_reachable ? 'status-good' : 'status-critical'}">${conn.router_reachable ? 'Reachable' : 'Unreachable'}</span>`;
+                        if (internetStatus) internetStatus.innerHTML = `Internet: <span class="font-semibold ${conn.internet_reachable ? 'status-good' : 'status-critical'}">${conn.internet_reachable ? 'Reachable' : 'Unreachable'}</span>`;
+                        if (connectionStatus) connectionStatus.innerHTML = `WiFi: <span class="font-semibold ${conn.is_connected ? 'status-good' : 'status-critical'}">${conn.is_connected ? 'Connected' : 'Disconnected'}</span>`;
+                    } else {
+                        console.log('No connectivity data available');
                     }
                     
                     // Update system info
                     if (data.system_info) {
                         const sys = data.system_info;
-                        document.getElementById('detail-cpu').textContent = `${sys.cpu_usage_percent?.toFixed(1)}%`;
-                        document.getElementById('detail-memory').textContent = `${sys.memory_usage_percent?.toFixed(1)}%`;
-                        document.getElementById('detail-bytes-sent').textContent = formatBytes(sys.bytes_sent);
-                        document.getElementById('detail-bytes-recv').textContent = formatBytes(sys.bytes_received);
+                        console.log('System info data:', sys);
+                        const detailCpu = document.getElementById('detail-cpu');
+                        const detailMemory = document.getElementById('detail-memory');
+                        const detailBytesSent = document.getElementById('detail-bytes-sent');
+                        const detailBytesRecv = document.getElementById('detail-bytes-recv');
+                        
+                        if (detailCpu) detailCpu.textContent = `${(sys.cpu_usage_percent || 0).toFixed(1)}%`;
+                        if (detailMemory) detailMemory.textContent = `${(sys.memory_usage_percent || 0).toFixed(1)}%`;
+                        if (detailBytesSent) detailBytesSent.textContent = formatBytes(sys.bytes_sent || 0);
+                        if (detailBytesRecv) detailBytesRecv.textContent = formatBytes(sys.bytes_received || 0);
+                    } else {
+                        console.log('No system info data available');
                     }
                     
-                    document.getElementById('last-update').textContent = new Date(data.timestamp).toLocaleString();
+                    const lastUpdate = document.getElementById('last-update');
+                    if (lastUpdate) lastUpdate.textContent = new Date(data.timestamp).toLocaleString();
                 }
             } catch (e) {
                 console.error('Failed to fetch current data:', e);
