@@ -1,0 +1,61 @@
+[package]
+name = "wifi-stability-tracker"
+version = "0.1.0"
+edition = "2021"
+description = "A comprehensive WiFi stability debugging tool with data collection and visualizations"
+authors = ["WiFi Debugger"]
+
+[dependencies]
+# Error handling
+anyhow = "1.0"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Web server for visualization dashboard
+axum = "0.7"
+tower-http = { version = "0.5", features = ["fs", "cors"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Database for storing metrics
+rusqlite = { version = "0.30", features = ["bundled"] }
+
+# System/Network info
+sysinfo = "0.30"
+
+# HTTP client for connectivity tests
+reqwest = { version = "0.11", features = ["json"] }
+
+# DNS resolution
+trust-dns-resolver = "0.23"
+
+# UUID for unique identifiers
+uuid = { version = "1.6", features = ["v4"] }
+
+# Statistics
+statrs = "0.16"
+
+# For running system commands (netsh, ping, etc.)
+which = "6.0"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.52", features = [
+    "Win32_Foundation",
+    "Win32_NetworkManagement_WiFi",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_Networking_WinSock",
+] }
