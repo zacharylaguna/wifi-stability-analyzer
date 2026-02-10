@@ -3,6 +3,7 @@ mod monitor;
 mod storage;
 mod web;
 mod analysis;
+mod gui;
 
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -50,6 +51,10 @@ enum Commands {
         /// DNS servers to test (comma-separated)
         #[arg(long, default_value = "8.8.8.8,1.1.1.1")]
         dns_servers: String,
+
+        /// Disable GUI window and use browser only
+        #[arg(long, default_value = "false")]
+        no_gui: bool,
     },
     /// Export collected data to JSON
     Export {
@@ -88,6 +93,10 @@ enum Commands {
         /// Port for the web dashboard
         #[arg(short, long, default_value = "8080")]
         port: u16,
+
+        /// Disable GUI window and use browser only
+        #[arg(long, default_value = "false")]
+        no_gui: bool,
     },
 }
 
@@ -103,6 +112,7 @@ async fn main() -> anyhow::Result<()> {
             log_dir,
             ping_targets,
             dns_servers,
+            no_gui,
         } => {
             // Set up logging
             std::fs::create_dir_all(&log_dir)?;
@@ -143,25 +153,37 @@ async fn main() -> anyhow::Result<()> {
 
             // Start web server in background
             let web_store = store.clone();
-            let web_handle = tokio::spawn(async move {
-                if let Err(e) = start_web_server(web_store, port).await {
-                    tracing::error!("Web server error: {}", e);
-                }
+            let web_port = port;
+            std::thread::spawn(move || {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async move {
+                    if let Err(e) = start_web_server(web_store, web_port).await {
+                        tracing::error!("Web server error: {}", e);
+                    }
+                });
             });
 
-            // Start monitoring
-            let monitor_handle = tokio::spawn(async move {
-                monitor.start().await;
+            // Give web server time to start
+            std::thread::sleep(std::time::Duration::from_secs(2));
+
+            // Start monitoring in background
+            std::thread::spawn(move || {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async move {
+                    monitor.start().await;
+                });
             });
 
-            info!("Press Ctrl+C to stop monitoring");
-
-            // Wait for shutdown signal
-            tokio::signal::ctrl_c().await?;
-            info!("Shutting down...");
-
-            monitor_handle.abort();
-            web_handle.abort();
+            // Launch GUI or wait for Ctrl+C
+            if !no_gui {
+                info!("Launching GUI window...");
+                gui::launch_gui(port)?;
+            } else {
+                info!("Running in headless mode. Press Ctrl+C to stop monitoring");
+                info!("Open http://localhost:{} in your browser", port);
+                tokio::signal::ctrl_c().await?;
+                info!("Shutting down...");
+            }
 
             Ok(())
         }
@@ -185,7 +207,7 @@ async fn main() -> anyhow::Result<()> {
             println!("\nReport saved to {:?}", output);
             Ok(())
         }
-        Commands::Dashboard { database, port } => {
+        Commands::Dashboard { database, port, no_gui } => {
             tracing_subscriber::registry()
                 .with(EnvFilter::from_default_env().add_directive(Level::INFO.into()))
                 .with(fmt::layer())
@@ -195,7 +217,31 @@ async fn main() -> anyhow::Result<()> {
             info!("Web dashboard: http://localhost:{}", port);
 
             let store = Arc::new(MetricsStore::new(&database)?);
-            start_web_server(store, port).await?;
+            
+            // Start web server in background thread
+            let web_port = port;
+            std::thread::spawn(move || {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async move {
+                    if let Err(e) = start_web_server(store, web_port).await {
+                        tracing::error!("Web server error: {}", e);
+                    }
+                });
+            });
+
+            // Give web server time to start
+            std::thread::sleep(std::time::Duration::from_secs(2));
+
+            // Launch GUI or wait for Ctrl+C
+            if !no_gui {
+                info!("Launching GUI window...");
+                gui::launch_gui(port)?;
+            } else {
+                info!("Open http://localhost:{} in your browser", port);
+                tokio::signal::ctrl_c().await?;
+                info!("Shutting down...");
+            }
+
             Ok(())
         }
     }

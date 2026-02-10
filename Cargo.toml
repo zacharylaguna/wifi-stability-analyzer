@@ -52,6 +52,11 @@ statrs = "0.16"
 # For running system commands (netsh, ping, etc.)
 which = "6.0"
 
+# WebView for standalone GUI
+wry = "0.37"
+tao = "0.26"
+rfd = "0.14"
+
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.52", features = [
     "Win32_Foundation",
